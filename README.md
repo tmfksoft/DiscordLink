@@ -1,4 +1,4 @@
-# DiscordLink #
+# DiscordLink
 Welcome to the source for DiscordLink.
 PRs and Issues are welcome.
 However, please do not fork DiscordLink without permission.
@@ -7,7 +7,7 @@ You are welcome to build from source and use it on your server.
 However forking with the intent to redistribute under a different name is STRICTLY NOT ALLOWED.
 That is classed as stealing please do not do it.
 
-# Compiling #
+# Compiling
 Compilation is pretty easy. You will need to have maven installed.
 When maven is installed run `mvn package` in the root directory of the plugin.
 
