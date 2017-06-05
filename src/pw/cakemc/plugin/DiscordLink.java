@@ -124,7 +124,6 @@ public class DiscordLink extends JavaPlugin implements Listener {
                     api.registerListener(new MessageCreateListener() {
                         @Override
                         public void onMessageCreate(DiscordAPI api, Message message) {
-                            getLogger().info("[Discord] "+message.getAuthor().getName() + ": " + message.getContent());
 
                             // Ignore own messages.
                             if (message.getAuthor().getId() == api.getYourself().getId()) return;
@@ -139,20 +138,22 @@ public class DiscordLink extends JavaPlugin implements Listener {
                                             return;
                                     }
                                     if (channel.canRecieve()) {
+                                        // Only log messages in channels we care about
+                                        getLogger().info("[Discord] "+message.getAuthor().getName() + ": " + message.getContent());
 
                                         // Format the message!
                                         String format = recieveFormat;
 
-                                    /*
-                                    # - {user.id} - The Discord users ID
-                                    # - {user.name} - The Discord users username
-                                    # - {user.nick} - The Discord users nickname (If they lack one it will default to their username}
-                                    # - {server.id} - The ID of the Discord Server the message originated.
-                                    # - {server.name} - The name of the Discord Server the message originated.
-                                    # - {channel.id} - The ID of the Discord Channel the message originated.
-                                    # - {channel.name} - The name of the Discord Channel the message originated.
-                                    # - {message} - The contents of the message the user sent. (Image messages will be ignored)
-                                     */
+                                        /*
+                                        # - {user.id} - The Discord users ID
+                                        # - {user.name} - The Discord users username
+                                        # - {user.nick} - The Discord users nickname (If they lack one it will default to their username}
+                                        # - {server.id} - The ID of the Discord Server the message originated.
+                                        # - {server.name} - The name of the Discord Server the message originated.
+                                        # - {channel.id} - The ID of the Discord Channel the message originated.
+                                        # - {channel.name} - The name of the Discord Channel the message originated.
+                                        # - {message} - The contents of the message the user sent. (Image messages will be ignored)
+                                         */
 
                                         format = format.replace("{user.id}", message.getAuthor().getId());
                                         format = format.replace("{user.name}", message.getAuthor().getName());
