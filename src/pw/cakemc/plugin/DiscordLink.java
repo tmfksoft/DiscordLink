@@ -15,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import pw.cakemc.plugin.http.Request;
@@ -44,6 +45,9 @@ public class DiscordLink extends JavaPlugin implements Listener {
 
     // Le Debug!
     private boolean debug = false;
+
+    // Cringe?
+    private List<Player> OnlinePlayers = new ArrayList<Player>();
 
     public void onEnable() {
         saveDefaultConfig();
@@ -207,6 +211,7 @@ public class DiscordLink extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent ev) {
+        OnlinePlayers.add(ev.getPlayer());
         for (KnownGuild guild : guilds) {
             for (KnownChannel channel : guild.getChannels()) {
                 if (channel.canSend() && api != null) {
@@ -222,12 +227,37 @@ public class DiscordLink extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent ev) {
+        if (!OnlinePlayers.contains(ev.getPlayer())) return;
+        OnlinePlayers.remove(ev.getPlayer());
         for (KnownGuild guild : guilds) {
             for (KnownChannel channel : guild.getChannels()) {
                 if (channel.canSend() && api != null) {
                     for (Channel ch : api.getChannels()) {
                         if (ch.getId().equalsIgnoreCase(channel.getName())) {
-                            ch.sendMessage(ev.getPlayer().getName()+" left the game");
+                            ch.sendMessage(ChatColor.stripColor(ev.getQuitMessage()));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onKick(PlayerKickEvent ev) {
+        OnlinePlayers.remove(ev.getPlayer());
+
+        getLogger().info(ev.getLeaveMessage());
+
+        for (KnownGuild guild : guilds) {
+            for (KnownChannel channel : guild.getChannels()) {
+                if (channel.canSend() && api != null) {
+                    for (Channel ch : api.getChannels()) {
+                        if (ch.getId().equalsIgnoreCase(channel.getName())) {
+                            if (ev.getReason() != null) {
+                                ch.sendMessage(ev.getPlayer().getName() + " was kicked from the game: " + ev.getReason());
+                            } else {
+                                ch.sendMessage(ev.getPlayer().getName() + " was kick from the game");
+                            }
                         }
                     }
                 }
