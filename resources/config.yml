@@ -58,6 +58,8 @@ format:
 # A channel can also take a webhook (optional), when a webhook is set for a channel messages from Minecraft
 # will be sent via that webhook with the players username and message.
 # Webhook messages DO NOT use the send format.
+# A channel also may posses 'options' this can be accessed by plugins integrating with DiscordLink
+# to get channel specific settings.
 guilds:
   '000000000000000000':
     enabled: true
@@ -66,3 +68,4 @@ guilds:
         webhook: "https://discordapp.com/api/webhooks/SERVERID/WEBHOOK"
         send: true
         recieve: true
+        options: []
