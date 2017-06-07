@@ -2,3 +2,4 @@ name: DiscordLink
 version: ${project.version}
 main: pw.cakemc.plugin.DiscordLink
 description: Relays messages between Discord and Minecraft
+softdepend: [Towny,TownyChat,Vault]

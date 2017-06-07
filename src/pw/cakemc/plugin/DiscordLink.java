@@ -7,7 +7,6 @@ import de.btobastian.javacord.Javacord;
 import de.btobastian.javacord.entities.Channel;
 import de.btobastian.javacord.entities.message.Message;
 import de.btobastian.javacord.listener.message.MessageCreateListener;
-import jdk.nashorn.internal.runtime.regexp.joni.Regex;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -18,8 +17,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import pw.cakemc.plugin.events.DiscordRelayEvent;
 import pw.cakemc.plugin.http.Request;
 import pw.cakemc.plugin.http.Response;
+import pw.cakemc.plugin.integration.Integration;
+import pw.cakemc.plugin.integration.TownyChatIntegration;
+import pw.cakemc.plugin.integration.TownyIntegration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,9 +52,24 @@ public class DiscordLink extends JavaPlugin implements Listener {
     // Cringe?
     private List<Player> OnlinePlayers = new ArrayList<Player>();
 
+    // Integrations
+    private List<Integration> integrations = new ArrayList<Integration>();
+
     public void onEnable() {
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this,this);
+
+        // Core Towny Integration
+        if (getServer().getPluginManager().isPluginEnabled("Towny")) {
+            TownyIntegration townyIntegration = new TownyIntegration(this);
+            getServer().getPluginManager().registerEvents(townyIntegration, this);
+        }
+
+        // Core TownyChat Integration
+        if (getServer().getPluginManager().isPluginEnabled("TownyChat")) {
+            TownyChatIntegration townyChatIntegration = new TownyChatIntegration(this);
+            getServer().getPluginManager().registerEvents(townyChatIntegration, this);
+        }
 
         if (getConfig().contains("guilds")) {
             for (String sid : getConfig().getConfigurationSection("guilds").getKeys(false)) {
@@ -60,10 +78,16 @@ public class DiscordLink extends JavaPlugin implements Listener {
                 ConfigurationSection guildSection = getConfig().getConfigurationSection("guilds").getConfigurationSection(sid);
 
                 for (String ch : guildSection.getConfigurationSection("channels").getKeys(false)) {
-                    KnownChannel channel = new KnownChannel(ch, guild);
-                    guild.addChannel(channel);
 
                     ConfigurationSection channelSection = guildSection.getConfigurationSection("channels").getConfigurationSection(ch);
+
+                    ConfigurationSection channelOptions = null;
+                    if (channelSection.contains("options")) {
+                        channelOptions = channelSection.getConfigurationSection("options");
+                    }
+                    KnownChannel channel = new KnownChannel(ch, guild, channelOptions);
+                    guild.addChannel(channel);
+
                     if (channelSection.contains("webhook")) {
                         Request req = new Request(channelSection.getString("webhook"));
                         Future<Response> response = executor.submit(req);
@@ -175,6 +199,12 @@ public class DiscordLink extends JavaPlugin implements Listener {
 
                                         format = format.replace("{message}", message.getContent());
 
+                                        RelayUser user = new RelayUser(message.getAuthor().getId(), message.getAuthor().getName(), nick, RelayUser.UserType.DISCORD);
+
+                                        DiscordRelayEvent event = new DiscordRelayEvent(DiscordRelayEvent.EventType.CHAT, DiscordRelayEvent.Destination.MINECRAFT, user, channel, format);
+                                        getServer().getPluginManager().callEvent(event);
+                                        if (event.isCancelled()) return;
+
                                         for (Player player : getServer().getOnlinePlayers()) {
                                             player.sendMessage(format);
                                         }
@@ -211,13 +241,21 @@ public class DiscordLink extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent ev) {
+
+        RelayUser user = new RelayUser(ev.getPlayer().getUniqueId().toString(), ev.getPlayer().getName(), ev.getPlayer().getDisplayName(), RelayUser.UserType.MINECRAFT);
+
         OnlinePlayers.add(ev.getPlayer());
         for (KnownGuild guild : guilds) {
             for (KnownChannel channel : guild.getChannels()) {
                 if (channel.canSend() && api != null) {
                     for (Channel ch : api.getChannels()) {
                         if (ch.getId().equalsIgnoreCase(channel.getName())) {
-                            ch.sendMessage(ev.getPlayer().getName()+" joined the game");
+                            String message = ev.getPlayer().getName()+" joined the game";
+                            DiscordRelayEvent event = new DiscordRelayEvent(DiscordRelayEvent.EventType.JOIN, DiscordRelayEvent.Destination.DISCORD, user, channel,message);
+                            getServer().getPluginManager().callEvent(event);
+                            if (event.isCancelled()) return;
+
+                            ch.sendMessage(message);
                         }
                     }
                 }
@@ -229,12 +267,20 @@ public class DiscordLink extends JavaPlugin implements Listener {
     public void onQuit(PlayerQuitEvent ev) {
         if (!OnlinePlayers.contains(ev.getPlayer())) return;
         OnlinePlayers.remove(ev.getPlayer());
+
+        RelayUser user = new RelayUser(ev.getPlayer().getUniqueId().toString(), ev.getPlayer().getName(), ev.getPlayer().getDisplayName(), RelayUser.UserType.MINECRAFT);
+
         for (KnownGuild guild : guilds) {
             for (KnownChannel channel : guild.getChannels()) {
                 if (channel.canSend() && api != null) {
                     for (Channel ch : api.getChannels()) {
                         if (ch.getId().equalsIgnoreCase(channel.getName())) {
-                            ch.sendMessage(ChatColor.stripColor(ev.getQuitMessage()));
+
+                            String message = ChatColor.stripColor(ev.getQuitMessage());
+                            DiscordRelayEvent event = new DiscordRelayEvent(DiscordRelayEvent.EventType.QUIT, DiscordRelayEvent.Destination.DISCORD, user, channel,message);
+                            getServer().getPluginManager().callEvent(event);
+                            if (event.isCancelled()) return;
+                            ch.sendMessage(event.getMessage());
                         }
                     }
                 }
@@ -248,16 +294,24 @@ public class DiscordLink extends JavaPlugin implements Listener {
 
         getLogger().info(ev.getLeaveMessage());
 
+        RelayUser user = new RelayUser(ev.getPlayer().getUniqueId().toString(), ev.getPlayer().getName(), ev.getPlayer().getDisplayName(), RelayUser.UserType.MINECRAFT);
+
         for (KnownGuild guild : guilds) {
             for (KnownChannel channel : guild.getChannels()) {
                 if (channel.canSend() && api != null) {
                     for (Channel ch : api.getChannels()) {
+
                         if (ch.getId().equalsIgnoreCase(channel.getName())) {
+
+                            String message = ev.getPlayer().getName() + " was kicked from the game";
+
                             if (ev.getReason() != null) {
-                                ch.sendMessage(ev.getPlayer().getName() + " was kicked from the game: " + ev.getReason());
-                            } else {
-                                ch.sendMessage(ev.getPlayer().getName() + " was kick from the game");
+                                message = ev.getPlayer().getName() + " was kicked from the game: " + ev.getReason();
                             }
+                            DiscordRelayEvent event = new DiscordRelayEvent(DiscordRelayEvent.EventType.KICK, DiscordRelayEvent.Destination.DISCORD, user, channel,message);
+                            getServer().getPluginManager().callEvent(event);
+                            if (event.isCancelled()) return;
+                            ch.sendMessage(event.getMessage());
                         }
                     }
                 }
@@ -268,15 +322,30 @@ public class DiscordLink extends JavaPlugin implements Listener {
     @EventHandler
     public void onChat(AsyncPlayerChatEvent ev) {
 
+        RelayUser user = new RelayUser(ev.getPlayer().getUniqueId().toString(), ev.getPlayer().getName(), ev.getPlayer().getDisplayName(), RelayUser.UserType.MINECRAFT);
+
         for (KnownGuild guild : guilds) {
             for (KnownChannel channel : guild.getChannels()) {
                 if (channel.canSend() && api != null) {
                     for (Channel ch : api.getChannels()) {
                         if (ch.getId().equalsIgnoreCase(channel.getName())) {
+
+                            DiscordRelayEvent event;
+                            String message = ev.getMessage();
+
                             if (channel.getWebhook() == null) {
-                                ch.sendMessage(minecraftFormat(ev.getPlayer(), ev.getMessage(), sendFormat));
+                                message = minecraftFormat(ev.getPlayer(), ev.getMessage(), sendFormat);
+                                event = new DiscordRelayEvent(DiscordRelayEvent.EventType.CHAT, DiscordRelayEvent.Destination.DISCORD, user, channel, message);
+                                getServer().getPluginManager().callEvent(event);
+                                if (event.isCancelled()) return;
+
+                                ch.sendMessage(event.getMessage());
                             } else {
-                                dispatchChat(ev.getPlayer(), ev.getMessage(), channel);
+                                event = new DiscordRelayEvent(DiscordRelayEvent.EventType.CHAT, DiscordRelayEvent.Destination.DISCORD, user, channel, message);
+                                getServer().getPluginManager().callEvent(event);
+                                if (event.isCancelled()) return;
+
+                                dispatchChat(ev.getPlayer(), event.getMessage(), channel);
                             }
                         }
                     }
@@ -322,7 +391,7 @@ public class DiscordLink extends JavaPlugin implements Listener {
         # - {player.display} - The Players display name (Nickname)
         # - {player.uuid} - The players UUID
         # - {world} - The world the player is currently in.
-        # // Towny Variables - If you use Towny //
+        # // TownyIntegration Variables - If you use TownyIntegration //
         # - {town} - The town the player is in
         # - {nation} - The nation the player is in
         # // Permissions Variables - If you use a Vault supported permissions plugin //
@@ -337,6 +406,12 @@ public class DiscordLink extends JavaPlugin implements Listener {
         format = format.replace("{world}", player.getWorld().getName());
         format = format.replace("{message}", message);
 
+        format = ChatColor.stripColor(format);
+
         return format;
+    }
+
+    public DiscordAPI getDiscordAPI() {
+        return this.api;
     }
 }

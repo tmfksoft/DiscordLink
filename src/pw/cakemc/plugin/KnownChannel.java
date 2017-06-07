@@ -1,16 +1,20 @@
 package pw.cakemc.plugin;
 
 
+import org.bukkit.configuration.ConfigurationSection;
+
 public class KnownChannel {
     private WebHook webhook = null;
     private String name = "";
     private KnownGuild guild;
     private boolean send = false;
     private boolean recieve = false;
+    private ConfigurationSection options;
 
-    public KnownChannel(String name, KnownGuild guild) {
+    public KnownChannel(String name, KnownGuild guild, ConfigurationSection opts) {
         this.name = name;
         this.guild = guild;
+        this.options = opts;
     }
 
     // Getters
@@ -28,6 +32,9 @@ public class KnownChannel {
     }
     public boolean canRecieve() {
         return this.recieve;
+    }
+    public ConfigurationSection getOptions() {
+        return this.options;
     }
 
     // Setters
