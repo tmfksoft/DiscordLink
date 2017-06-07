@@ -23,6 +23,7 @@ import pw.cakemc.plugin.http.Response;
 import pw.cakemc.plugin.integration.Integration;
 import pw.cakemc.plugin.integration.TownyChatIntegration;
 import pw.cakemc.plugin.integration.TownyIntegration;
+import pw.cakemc.plugin.integration.VaultIntegration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,6 +70,12 @@ public class DiscordLink extends JavaPlugin implements Listener {
         if (getServer().getPluginManager().isPluginEnabled("TownyChat")) {
             TownyChatIntegration townyChatIntegration = new TownyChatIntegration(this);
             getServer().getPluginManager().registerEvents(townyChatIntegration, this);
+        }
+
+        // Core Vault Integration
+        if (getServer().getPluginManager().isPluginEnabled("Vault")) {
+            VaultIntegration vaultIntegration = new VaultIntegration(this);
+            getServer().getPluginManager().registerEvents(vaultIntegration, this);
         }
 
         if (getConfig().contains("guilds")) {

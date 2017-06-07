@@ -17,9 +17,22 @@ When maven is installed run `mvn package` in the root directory of the plugin.
 There are some features planned for future releases, as a result these features a present in this repository.
 Planned features include:
 
- - Support for Towny chat and prefixes (Town names in chat and such)
- - Support for permissions to show permission prefixes.
- - Support for Economy to show Balances in chat.
+ - Support for Towny chat
+ - Support for GroupManager (Prefixes & Suffixes)
+ - Support for Essentials Muting
+
+**_Don't see a feature in there you'd like?_**
+
+DiscordLink provides its own event named `DiscordRelayEvent` you could write a plugin to listen to this event and modify the messages.
+That's how DiscordLink currently does it for its features.
+Alternatively you can create a PR to add it yourself or create an Issue requesting a feature.
+
+## Current Features
+DiscordLink already has support for the following plugins and features.
+
+ - Support for Towny in the form of variables in chat for town names and so on.
+ - Support for Permission Groups to show the players permission group in chat.
+ - Support for Economy plugins to show the players balance in chat. (For w.e reason)
 
 ## Branching
 DiscordLink's repo uses multiple branches.

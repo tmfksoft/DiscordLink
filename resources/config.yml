@@ -41,6 +41,7 @@ serverAddress: "DiscordLink ${project.version}"
 # - {group.name} - The name of the primary group the player is in.
 # // Economy Variables - If you use a Vault supported Economy plugin //
 # - {balance.value} - The players balance
+# - {balance.provider} - The provider of the balance. E.g. "Essentials Economy"
 
 format:
   recieve: "[{server.name}] <{user.name}> {message}"
