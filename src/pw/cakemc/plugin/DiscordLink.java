@@ -11,6 +11,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -68,6 +69,7 @@ public class DiscordLink extends JavaPlugin implements Listener {
 
         // Core TownyChat Integration
         if (getServer().getPluginManager().isPluginEnabled("TownyChat")) {
+            getLogger().info("TownyChat Integration Enabled");
             TownyChatIntegration townyChatIntegration = new TownyChatIntegration(this);
             getServer().getPluginManager().registerEvents(townyChatIntegration, this);
         }
@@ -326,9 +328,9 @@ public class DiscordLink extends JavaPlugin implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onChat(AsyncPlayerChatEvent ev) {
-
+        String message = ev.getMessage();
         RelayUser user = new RelayUser(ev.getPlayer().getUniqueId().toString(), ev.getPlayer().getName(), ev.getPlayer().getDisplayName(), RelayUser.UserType.MINECRAFT);
 
         for (KnownGuild guild : guilds) {
@@ -338,7 +340,6 @@ public class DiscordLink extends JavaPlugin implements Listener {
                         if (ch.getId().equalsIgnoreCase(channel.getName())) {
 
                             DiscordRelayEvent event;
-                            String message = ev.getMessage();
 
                             if (channel.getWebhook() == null) {
                                 message = minecraftFormat(ev.getPlayer(), ev.getMessage(), sendFormat);

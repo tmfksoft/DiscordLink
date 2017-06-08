@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>pw.cakemc.plugin</groupId>
   <artifactId>DiscordLink</artifactId>
-  <version>0.2</version>
+  <version>0.3</version>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <defaultGoal>clean package</defaultGoal>
@@ -110,6 +110,20 @@
           <groupId>org.bukkit</groupId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.palmergames.bukkit.towny</groupId>
+      <artifactId>Towny</artifactId>
+      <version>0.91.4.0</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/Towny.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.palmergames.bukkit.towny</groupId>
+      <artifactId>TownyChat</artifactId>
+      <version>0.91.4.0</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/TownyChat.jar</systemPath>
     </dependency>
   </dependencies>
 </project>
