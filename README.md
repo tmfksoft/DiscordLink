@@ -17,7 +17,6 @@ When maven is installed run `mvn package` in the root directory of the plugin.
 There are some features planned for future releases, as a result these features a present in this repository.
 Planned features include:
 
- - Support for Towny chat
  - Support for GroupManager (Prefixes & Suffixes)
  - Support for Essentials Muting
 
@@ -31,6 +30,7 @@ Alternatively you can create a PR to add it yourself or create an Issue requesti
 DiscordLink already has support for the following plugins and features.
 
  - Support for Towny in the form of variables in chat for town names and so on.
+ - Support for TownyChat, ignores messages directed to nonpublic channels such as Town, Nation and Admin channels.
  - Support for Permission Groups to show the players permission group in chat.
  - Support for Economy plugins to show the players balance in chat. (For w.e reason)
 

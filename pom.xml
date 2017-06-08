@@ -6,7 +6,7 @@
 
     <groupId>pw.cakemc.plugin</groupId>
     <artifactId>DiscordLink</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
