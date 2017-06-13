@@ -11,6 +11,7 @@ import pw.cakemc.plugin.DiscordLink;
 import pw.cakemc.plugin.events.DiscordRelayEvent;
 
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 public class TownyChatIntegration implements Integration {
@@ -21,7 +22,7 @@ public class TownyChatIntegration implements Integration {
     public TownyChatIntegration(DiscordLink parent) {
         townyChat = (Chat) parent.getServer().getPluginManager().getPlugin("TownyChat");
         this.parent = parent;
-
+        this.parent.setHandledExternally(true);
         Map<String, Channel> channels = townyChat.getChannelsHandler().getAllChannels();
 
         for (Map.Entry<String, Channel> ch : channels.entrySet()) {
@@ -39,7 +40,7 @@ public class TownyChatIntegration implements Integration {
 
         String[] parts = ev.getMessage().split(Character.toString('\0'));
         if (parts.length >= 3) {
-            //parent.getLogger().info("Relaying towny channel chatter.");
+            parent.getLogger().info("Relaying towny channel chatter.");
             ev.setMessage(parts[0]+parts[2]);
 
             String decoded = new String(Base64.getDecoder().decode(parts[1]));
@@ -49,10 +50,27 @@ public class TownyChatIntegration implements Integration {
                 if (info[0].equalsIgnoreCase("townychat")) {
                     Channel channel = townyChat.getChannelsHandler().getChannel(info[1]);
 
-                    // For now ignore non default|global channels.
-                    // In future support handpicking
-                    if (!channel.getType().equals(channelTypes.DEFAULT) && !channel.getType().equals(channelTypes.GLOBAL)) {
-                        //parent.getLogger().info("Cancelling non global/default message.");
+                    String message = ev.getMessage();
+                    message = message.replace("{channel}", channel.getName());
+                    ev.setMessage(message);
+
+                    if (ev.getChannel().getOptions() != null) {
+                        if (ev.getChannel().getOptions().contains("towny")) {
+                            List<String> relayedChannels = ev.getChannel().getOptions().getStringList("towny");
+                            boolean relay = false;
+                            parent.getLogger().info(relayedChannels.toString());
+                            for (String relayed : relayedChannels) {
+                                if (channel.getName().equalsIgnoreCase(relayed)) {
+                                    relay = true;
+                                }
+                            }
+                            if (!relay) ev.setCancelled(true);
+                        } else {
+                            // No channels setup ~ Nothing to relay.
+                            ev.setCancelled(true);
+                        }
+                    } else {
+                        // No channels setup ~ Nothing to relay.
                         ev.setCancelled(true);
                     }
 
@@ -76,8 +94,6 @@ public class TownyChatIntegration implements Integration {
         prefix = Character.toString((char) 0) + new String(encodedBytes) + Character.toString((char) 0);
 
         ev.getAsyncPlayerChatEvent().setMessage(prefix + ev.getMessage());
-
-        //parent.getLogger().info("TownyChat: "+ev.getChannel().getName()+": "+ev.getMessage());
-
+        this.parent.handleChatEvent(ev.getAsyncPlayerChatEvent());
     }
 }

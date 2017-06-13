@@ -56,6 +56,7 @@ public class DiscordLink extends JavaPlugin implements Listener {
 
     // Integrations
     private List<Integration> integrations = new ArrayList<Integration>();
+    private boolean handledExternally = false;
 
     public void onEnable() {
         saveDefaultConfig();
@@ -248,6 +249,13 @@ public class DiscordLink extends JavaPlugin implements Listener {
         return null;
     }
 
+    public void setHandledExternally(boolean bool) {
+        this.handledExternally = bool;
+    }
+    public boolean isHandledExternally() {
+        return this.handledExternally;
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent ev) {
 
@@ -330,6 +338,15 @@ public class DiscordLink extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onChat(AsyncPlayerChatEvent ev) {
+        if (!handledExternally) {
+            getLogger().info("Processing chat");
+            handleChatEvent(ev);
+        } else {
+            getLogger().info("Ignoring chat. Allowing third party to process it.");
+        }
+    }
+
+    public void handleChatEvent(AsyncPlayerChatEvent ev) {
         String message = ev.getMessage();
         RelayUser user = new RelayUser(ev.getPlayer().getUniqueId().toString(), ev.getPlayer().getName(), ev.getPlayer().getDisplayName(), RelayUser.UserType.MINECRAFT);
 

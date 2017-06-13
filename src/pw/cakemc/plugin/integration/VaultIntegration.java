@@ -8,9 +8,6 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import pw.cakemc.plugin.DiscordLink;
 import pw.cakemc.plugin.events.DiscordRelayEvent;
 
-/**
- * Created by Thomas on 07/06/2017.
- */
 public class VaultIntegration implements Integration {
 
     private DiscordLink parent;
