@@ -6,7 +6,7 @@
 
     <groupId>pw.cakemc.plugin</groupId>
     <artifactId>DiscordLink</artifactId>
-    <version>0.4</version>
+    <version>0.5</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -66,7 +66,7 @@
     <repositories>
         <repository>
             <id>destroystokyo-repo</id>
-            <url>https://repo.destroystokyo.com/repository/maven-public//</url>
+            <url>https://repo.destroystokyo.com/repository/maven-public/</url>
         </repository>
         <repository>
             <id>javacord-repo</id>
@@ -83,7 +83,7 @@
         <dependency>
             <groupId>com.destroystokyo.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.11.2-R0.1-SNAPSHOT</version>
+            <version>1.12-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!-- Vault -->
